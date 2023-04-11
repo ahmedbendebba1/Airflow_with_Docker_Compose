@@ -37,7 +37,7 @@ Ouvrez un terminal, accédez au répertoire où se trouve le fichier docker-comp
 
 Vous pouvez maintenant accéder à l'interface utilisateur web d'Airflow à l'adresse http://localhost:8080 dans votre navigateur.
 
-Créer un nouveau utilisateru airflow en lancant la commande et en changeant les valeurs ("ahmed" , ahmedbendebba@hotmail.com") par les valeurs de votre choix. le username et le password seront utiliser pour vous permettre de vous connecter à l'interface web de airflow
+Créer un nouveau utilisateru airflow en lancant la commande et en changeant les valeurs ("ahmed" , mail") par les valeurs de votre choix. le username et le password seront utiliser pour vous permettre de vous connecter à l'interface web de airflow
   ```sh
      docker-compose exec webserver airflow users create \
     --username ahmed \
@@ -45,7 +45,7 @@ Créer un nouveau utilisateru airflow en lancant la commande et en changeant les
     --firstname ahmed \
     --lastname ahmed \
     --role Admin \
-    --email ahmedbendebba@hotmail.com
+    --email mail
 ```
 
 
