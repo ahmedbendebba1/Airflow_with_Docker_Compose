@@ -1,0 +1,81 @@
+version: "3.8"
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  webserver:
+    image: apache/airflow:2.2.0
+    depends_on:
+      - postgres
+    environment:
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      # put <FERNET_KEY> as value for this key AIRFLOW__CORE__FERNET_KEY . in this case vQ0ru_QwhOH_HhCRRj5byg8el8eAeH9_BpiId3g52P8= is my <FERNET_KEY> 
+      - AIRFLOW__CORE__FERNET_KEY=vQ0ru_QwhOH_HhCRRj5byg8el8eAeH9_BpiId3g52P8=
+      # put <FERNET_KEY> as  value for this key AIRFLOW__WEBSERVER__SECRET_KEY
+      - AIRFLOW__WEBSERVER__SECRET_KEY=vQ0ru_QwhOH_HhCRRj5byg8el8eAeH9_BpiId3g52P8=
+      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__CELERY__BROKER_URL=redis://redis:6379/0
+      - AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=True
+    command: airflow webserver
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./plugins:/opt/airflow/plugins
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      
+  scheduler:
+    image: apache/airflow:2.2.0
+    depends_on:
+      - postgres
+    environment:
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      # put <FERNET_KEY> as  value for this key AIRFLOW__CORE__FERNET_KEY
+      - AIRFLOW__CORE__FERNET_KEY=vQ0ru_QwhOH_HhCRRj5byg8el8eAeH9_BpiId3g52P8=
+      # put <FERNET_KEY> as  value for this key AIRFLOW__WEBSERVER__SECRET_KEY
+      - AIRFLOW__WEBSERVER__SECRET_KEY=vQ0ru_QwhOH_HhCRRj5byg8el8eAeH9_BpiId3g52P8=
+      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__CELERY__BROKER_URL=redis://redis:6379/0
+      - AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://airflow:airflow@postgres:5432/airflow
+    command: airflow scheduler
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./plugins:/opt/airflow/plugins
+
+  worker:
+    image: apache/airflow:2.2.0
+    depends_on:
+      - postgres
+    environment:
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      # put <FERNET_KEY> as  value for this key AIRFLOW__CORE__FERNET_KEY
+      - AIRFLOW__CORE__FERNET_KEY=vQ0ru_QwhOH_HhCRRj5byg8el8eAeH9_BpiId3g52P8=
+      # put <FERNET_KEY> as  fvalue or this key AIRFLOW__WEBSERVER__SECRET_KEY
+      - AIRFLOW__WEBSERVER__SECRET_KEY=vQ0ru_QwhOH_HhCRRj5byg8el8eAeH9_BpiId3g52P8=
+      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__CELERY__BROKER_URL=redis://redis:6379/0
+      - AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://airflow:airflow@postgres:5432/airflow
+    command: airflow celery worker
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./plugins:/opt/airflow/plugins
+
+  redis:
+    image: redis:6
+
+volumes:
+  postgres-data:
+
